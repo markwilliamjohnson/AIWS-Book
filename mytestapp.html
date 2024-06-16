@@ -1,0 +1,89 @@
+<html>
+
+<head>
+    <title>My Custom AI App</title>
+    <style>
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr 1fr;
+            height: 100vh;
+            grid-gap: 10px;
+        }
+
+        .promptarea {
+            grid-row-start: 1;
+            grid-row-end: 5;
+            grid-column-start: 1;
+            grid-column-end: 2;
+            background-color: lightgreen;
+            padding: 10px;
+            overflow: auto;
+        }
+
+        .responsearea {
+            grid-row-start: 1;
+            grid-row-end: 5;
+            grid-column-start: 2;
+            grid-column-end: 6;
+            background-color: blue;
+            font-family: "Open Sans", sans-serif;
+            overflow: auto;
+            background-color: rgba(211, 209, 209, 0.767);
+
+        }
+    </style>
+    <script>
+        var mymessages = [];
+        function sendprompt() {
+            document.getElementById("responsearea").innerHTML = document.getElementById("responsearea").innerHTML + "<p><b>You:</b>" + document.getElementById("message").value
+            loadData(document.getElementById("message").value.replace(/"/g, "'"))
+        }
+
+        function loadData(prompt) {
+            var xhr = new XMLHttpRequest();
+            document.getElementById("loadingmsg").style.display = "block"
+            mymessages.push('{"role":"user", "content":"' + prompt + '"}')
+            
+            var data = new FormData();
+            prompttext = '[' + mymessages + ']'
+            data.append('prompttext', prompttext);
+            xhr.open('POST', 'http://13.40.150.219:7778/prompt_respond');
+
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    document.getElementById("loadingmsg").style.display = "none"
+                   
+                    airesponse = xhr.responseText.replace(/"/g, "'");
+                    document.getElementById("responsearea").innerHTML = document.getElementById("responsearea").innerHTML + "<p><b>AI Response:</b>" + airesponse
+                    mymessages.push('{"role": "assistant", "content": "' + airesponse + '"}')
+                } else {
+                    document.getElementById("loadingmsg").style.display = "none"
+                    alert("error")
+                }
+            };
+            xhr.send(data);
+        }
+    </script>
+</head>
+
+<body>
+    <div class="grid-container">
+        <div class="promptarea">
+            <h1>My Custom AI App</h1>
+            <div style="position:absolute;top:10px;left:10px;background-color: red; display:none" id="loadingmsg">
+                <h1>Loading - please wait</h1>
+            </div>
+            <label for="message">Enter Message:</label>
+            <input type="text" id="message">
+            <button onclick="sendprompt()">Process Message</button>
+            <br>
+            <button onclick="loadData('Explain occupational health in 10 words.')">Occupational Health</button>
+            <button onclick="loadData('Explain risks of respiratory disease from work in 10 words.')">Respiratory Risks</button>
+            <button onclick="loadData('Explain benefits of regulation of occupational health in 10 words.')">Regulation Benefits</button>
+        </div>
+        <div class="responsearea" id="responsearea">Responses</div>
+    </div>
+</body>
+
+</html>
